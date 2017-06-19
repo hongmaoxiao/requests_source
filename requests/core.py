@@ -10,6 +10,7 @@
     :copyright: (c) 2011 by Kenneth Reitz.
     :license: ISC, see LICENSE for more details.
 """
+import urllib
 import urllib2
 
 
@@ -24,12 +25,33 @@ __copyright__ = 'Copyright 2011 Kenneth Reitz'
 class Request(object):
 	"""The :class:`Request` object. It's awesome.
 	"""
-	pass
+	_METHODS = ('get', 'put', 'post', 'delete')
+
+	def __init__(self):
+		self.headers = dict()
+		self.method = None
+		self.response = None
+
+    def __setattr__(self, key, val):
+        if key == 'method':
+            if not val.lower() in _METHODS:
+                raise InvalidMethod()
+
+    def send(self):
+        pass
+        set self.response()
+        # return True / False
 
 
 class Response(object):
 	"""The :class:`Request` object. It's awesome.
 	"""
+
+    def __init__(self):
+        self.content = None
+        self.status_code = None
+        self.headers = dict()
+
 
 class AuthObject(object):
 	"""The :class:`AuthObject` is a simple HTTP Authentication token.
@@ -43,15 +65,24 @@ class AuthObject(object):
 		self.password = password
 
 
-def get():
+def get(url, params={}, headers={}, auth=None):
     pass
 
-def post():
+def post(url, params={}, headers={}, auth=None):
     pass
 
-def put():
+def put(url, params={}, headers={}, auth=None):
     pass
 
-def delete():
+def delete(url, params={}, headers={}, auth=None):
     pass
 
+
+def add_autoauth(url, authobject):
+    global AUTHOAUTHS
+
+    AUTHOAUTHS.append((url, authobject))
+
+
+class InvalidMethod(Exception):
+	"""An innappropriate method was attempted."""
