@@ -10,6 +10,8 @@
     :copyright: (c) 2011 by Kenneth Reitz.
     :license: ISC, see LICENSE for more details.
 """
+
+import httplib
 import urllib
 import urllib2
 
@@ -20,6 +22,9 @@ __build__ = 0x000001
 __author__ = 'Kenneth Reitz'
 __license__ = 'ISC'
 __copyright__ = 'Copyright 2011 Kenneth Reitz'
+
+
+AUTHOAUTHS = []
 
 
 class Request(object):
@@ -38,9 +43,10 @@ class Request(object):
                 raise InvalidMethod()
 
     def send(self):
-        pass
-        set self.response()
+        """Sends the requests."""
+        # set self.response()
         # return True / False
+        pass
 
 
 class Response(object):
@@ -67,15 +73,19 @@ class AuthObject(object):
 
 def get(url, params={}, headers={}, auth=None):
     pass
+    # return response object
 
 def post(url, params={}, headers={}, auth=None):
     pass
+    # return response object
 
 def put(url, params={}, headers={}, auth=None):
     pass
+    # return response object
 
 def delete(url, params={}, headers={}, auth=None):
     pass
+    # return response object
 
 
 def add_autoauth(url, authobject):
@@ -84,5 +94,16 @@ def add_autoauth(url, authobject):
     AUTHOAUTHS.append((url, authobject))
 
 
-class InvalidMethod(Exception):
-	"""An innappropriate method was attempted."""
+
+
+class RequestException(Exception):
+    """There was an ambiguous exception that occured while handling requests."""
+
+class AuthenticationError(RequestException):
+    """The authentication credentials provided are invalid."""
+
+class URLRequired(RequestException):
+    """A invalid URL is required to make a request."""
+
+class InvalidMethod(RequestException):
+    """An inappropriate method was attempted."""
