@@ -15,8 +15,9 @@ import httplib
 import urllib
 import urllib2
 
+import requests.handler
 
-__title__ = 'convore'
+__title__ = 'requests'
 __version__ = '0.0.1'
 __build__ = 0x000001
 __author__ = 'Kenneth Reitz'
@@ -30,12 +31,14 @@ AUTHOAUTHS = []
 class Request(object):
 	"""The :class:`Request` object. It's awesome.
 	"""
-	_METHODS = ('get', 'put', 'post', 'delete')
+
+	_METHODS = ('get', 'head', 'put', 'post', 'delete')
 
 	def __init__(self):
 		self.headers = dict()
 		self.method = None
 		self.response = None
+        self.auth = None
 
     def __setattr__(self, key, val):
         if key == 'method':
@@ -46,7 +49,6 @@ class Request(object):
         """Sends the requests."""
         # set self.response()
         # return True / False
-        pass
 
 
 class Response(object):
@@ -72,18 +74,35 @@ class AuthObject(object):
 
 
 def get(url, params={}, headers={}, auth=None):
-    pass
+    """Sends a GET request. Returns :class:`Response` object.
+    """
+    r = Request()
+
+    r.url = url
+    r.headers = headers
+    r.auth = _detect_auth(url, auth)
+    r.method = 'GET'
+    r.send()
+
+    return r.response
+
     # return response object
 
 def post(url, params={}, headers={}, auth=None):
+    """Sends a POST request. Returns :class:`Response` object.
+    """
     pass
     # return response object
 
 def put(url, params={}, headers={}, auth=None):
+    """Sends a PUT request. Returns :class:`Response` object.
+    """
     pass
     # return response object
 
 def delete(url, params={}, headers={}, auth=None):
+    """Sends a DELETE request. Returns :class:`Response` object.
+    """
     pass
     # return response object
 
@@ -93,7 +112,15 @@ def add_autoauth(url, authobject):
 
     AUTHOAUTHS.append((url, authobject))
 
+def _detect_auth(url, auth):
+    return _get_autoauth(url) if not auth else auth
 
+def _get_autoauth(url):
+    for (autoauth_url, auth) in AUTOAUTHS:
+        if autoauth_url in url:
+            return auth
+
+    return None
 
 
 class RequestException(Exception):
