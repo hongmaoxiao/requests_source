@@ -37,54 +37,89 @@ class Request(object):
 	def __init__(self):
 		self.headers = dict()
 		self.method = None
-        self.params = {}
-        self.data = None
+		self.params = {}
+		self.data = None
 		self.response = Response()
-        self.auth = None
-        self.sent = False
+		self.auth = None
+		self.sent = False
 
-    def __setattr__(self, name, value):
-        if (name == 'method') and (value):
-            if not value.lower() in self._METHODS:
-                raise InvalidMethod()
+	def __setattr__(self, name, value):
+		if (name == 'method') and (value):
+			if not value.lower() in self._METHODS:
+				raise InvalidMethod()
 
         object.__setattr__(self, name, value)
+
+
+	def _checks(self):
+		pass
 
     def send(self, anyway=False):
         """Sends the requests.
 
            :param anyway: If True, request will be sent, even if it has already been sent.
         """
+        self._checks()
 
         if self.method.lower() == 'get':
             if (not self.sent) or anyway:
-                r = urllib.urlopen('http://kennethreitz.com')
-                self.response.headers = r.headers.dict
-                self.response.status_code = r.code
-                self.response.content = r.read()
+                try:
+                    r = urllib.urlopen('http://kennethreitz.com')
+                    self.response.headers = r.headers.dict
+                    self.response.status_code = r.code
+                    self.response.content = r.read()
 
-                success = True
+                    success = True
+                except Exception:
+                    raise RequestException
+
 
         elif self.method.lower() == 'head':
             if (not self.sent) or anyway:
-                pass
+                try:
+                    pass
+
+                    success = True
+
+                except Exception:
+                    raise RequestException
 
         elif self.method.lower() == 'put':
             if (not self.sent) or anyway:
-                pass
+                try:
+                    pass
+
+                    success = True
+
+                except Exception:
+                    raise RequestException
 
         elif self.method.lower() == 'post':
             if (not self.sent) or anyway:
-                pass
+                try:
+                    pass
+
+                    success = True
+
+                except Exception:
+                    raise RequestException
 
         elif self.method.lower() == 'delete':
             if (not self.sent) or anyway:
-                pass
+                try:
+                    pass
 
-        # set self.response()
+                    success = True
 
-        if success:
-            self.sent = True
+                except Exception:
+                    raise RequestException
+
+        else:
+            raise InvalidMethod
+
+
+        self.sent = True if success else False
+
         return success
 
 
