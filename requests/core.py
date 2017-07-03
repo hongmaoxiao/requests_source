@@ -35,10 +35,11 @@ class Request(object):
 	_METHODS = ('get', 'head', 'put', 'post', 'delete')
 
 	def __init__(self):
+        self.url = None
 		self.headers = dict()
 		self.method = None
 		self.params = {}
-		self.data = None
+		self.data = {}
 		self.response = Response()
 		self.auth = None
 		self.sent = False
@@ -64,12 +65,8 @@ class Request(object):
         if self.method.lower() == 'get':
             if (not self.sent) or anyway:
                 try:
-                    r = urllib.urlopen('http://kennethreitz.com')
-                    self.response.headers = r.headers.dict
-                    self.response.status_code = r.code
-                    self.response.content = r.read()
+                    pass
 
-                    success = True
                 except Exception:
                     raise RequestException
 
@@ -97,7 +94,38 @@ class Request(object):
         elif self.method.lower() == 'post':
             if (not self.sent) or anyway:
                 try:
-                    pass
+
+                    req = urllib2.Request(self.url)
+
+                    if self.headers:
+                        r.headers = self.headers
+
+                    # url encode form data if it's a dict
+                    if isinstance(self.data, dict):
+                        req.data = urllib.urlencode(self.data)
+                    else:
+                        req.data = self.data
+
+
+                    if self.auth:
+
+                        # create a password manager
+                        password_mgr  = urllib2.HTTPPasswordMgrWithDefaultRealm()
+
+                        # Add the username and password.
+                        # If we knew the realm, we could use it instead of ``None``.
+                        password_mgr.add_password(None, self.url, self.auth.username, self.auth.password)
+                        handler = urllib2.HTTPBasicAuthHandler(password_mgr)
+                        opener = urllib2.build_opener(handler)
+
+                        # use the opener to fetch a URL
+                        resp = opener.open(req)
+                    else:
+                        resp = urllib2.urlopen(req)
+
+                    self.response.status_code = resp.code
+                    self.response.headers = resp.info().dict
+                    self.response.content = resp.read()
 
                     success = True
 
@@ -160,14 +188,14 @@ def get(url, params={}, headers={}, auth=None):
     return r.response
 
 
-def post(url, params={}, headers={}, auth=None):
+def head(url, data={}, headers={}, auth=None):
     """Sends a HEAD request. Returns :class:`Response` object.
     """
     r = Request()
 
     r.method = 'HEAD'
     # return response object
-
+    r.data = data
     r.headers = headers
     r.auth = _detect_auth(url, auth)
 
@@ -176,13 +204,15 @@ def post(url, params={}, headers={}, auth=None):
     return r.response
 
 
-def post(url, params={}, headers={}, auth=None):
+def post(url, data={}, headers={}, auth=None):
     """Sends a POST request. Returns :class:`Response` object.
     """
     r = Request()
 
+    r.url = url
     r.method = 'POST'
     # return response object
+    r.data = data
 
     r.headers = headers
     r.auth = _detect_auth(url, auth)
