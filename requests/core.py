@@ -35,7 +35,7 @@ class Request(object):
 	_METHODS = ('get', 'head', 'put', 'post', 'delete')
 
 	def __init__(self):
-        self.url = None
+    self.url = None
 		self.headers = dict()
 		self.method = None
 		self.params = {}
@@ -55,118 +55,151 @@ class Request(object):
 	def _checks(self):
 		pass
 
-    def send(self, anyway=False):
-        """Sends the requests.
+  def send(self, anyway=False):
+    """Sends the requests.
 
-           :param anyway: If True, request will be sent, even if it has already been sent.
-        """
-        self._checks()
+        :param anyway: If True, request will be sent, even if it has already been sent.
+    """
+    self._checks()
 
-        if self.method.lower() == 'get':
-            if (not self.sent) or anyway:
-                try:
-                    pass
+    if self.method.lower() == 'get':
+      if (not self.sent) or anyway:
+        try:
+          req = urllib2.Request(self.url)
 
-                except Exception:
-                    raise RequestException
+          if self.headers:
+            r.headers = self.headers
 
+          # url encode from data if it's a dict
+          if isinstance(self.data, dict):
+            req.params = urllib.urlencode(self.params)
+          else:
+            req.params = self.params
 
-        elif self.method.lower() == 'head':
-            if (not self.sent) or anyway:
-                try:
-                    pass
+          if self.auth:
 
-                    success = True
+            # create a password manager
+            password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
 
-                except Exception:
-                    raise RequestException
+            # add the username and password.
+            # if we knew the realm, we could use it instead of ``None``.
+            password_mgr.add_password(None, self.url, self.auth.username, self.auth.password)
+            handler = urllib2.HTTPBasicAuthHandler(password_mgr)
+            opener = urllib2.build_opener(handler)
 
-        elif self.method.lower() == 'put':
-            if (not self.sent) or anyway:
-                try:
-                    pass
+            # use the opener to fetch a url
+            resp = opener.open(req)
+          else:
+            resp = urllib2.urlopen(req)
 
-                    success = True
-
-                except Exception:
-                    raise RequestException
-
-        elif self.method.lower() == 'post':
-            if (not self.sent) or anyway:
-                try:
-
-                    req = urllib2.Request(self.url)
-
-                    if self.headers:
-                        r.headers = self.headers
-
-                    # url encode form data if it's a dict
-                    if isinstance(self.data, dict):
-                        req.data = urllib.urlencode(self.data)
-                    else:
-                        req.data = self.data
+          self.response.status_code = resp.code
+          self.response.headers = resp.info().dict
+          self.response.content = resp.read()
 
 
-                    if self.auth:
-
-                        # create a password manager
-                        password_mgr  = urllib2.HTTPPasswordMgrWithDefaultRealm()
-
-                        # Add the username and password.
-                        # If we knew the realm, we could use it instead of ``None``.
-                        password_mgr.add_password(None, self.url, self.auth.username, self.auth.password)
-                        handler = urllib2.HTTPBasicAuthHandler(password_mgr)
-                        opener = urllib2.build_opener(handler)
-
-                        # use the opener to fetch a URL
-                        resp = opener.open(req)
-                    else:
-                        resp = urllib2.urlopen(req)
-
-                    self.response.status_code = resp.code
-                    self.response.headers = resp.info().dict
-                    self.response.content = resp.read()
-
-                    success = True
-
-                except Exception:
-                    raise RequestException
-
-        elif self.method.lower() == 'delete':
-            if (not self.sent) or anyway:
-                try:
-                    pass
-
-                    success = True
-
-                except Exception:
-                    raise RequestException
-
-        else:
-            raise InvalidMethod
+          success = True
 
 
-        self.sent = True if success else False
+        except Exception:
+          raise RequestException
 
-        return success
+
+      elif self.method.lower() == 'head':
+        if (not self.sent) or anyway:
+          try:
+            pass
+
+            success = True
+
+        except Exception:
+          raise RequestException
+
+      elif self.method.lower() == 'put':
+        if (not self.sent) or anyway:
+          try:
+            pass
+
+            success = True
+
+          except Exception:
+            raise RequestException
+
+      elif self.method.lower() == 'post':
+        if (not self.sent) or anyway:
+          try:
+
+            req = urllib2.Request(self.url)
+
+            if self.headers:
+              r.headers = self.headers
+
+            # url encode form data if it's a dict
+            if isinstance(self.data, dict):
+              req.data = urllib.urlencode(self.data)
+            else:
+              req.data = self.data
+
+
+            if self.auth:
+
+              # create a password manager
+              password_mgr  = urllib2.HTTPPasswordMgrWithDefaultRealm()
+
+              # Add the username and password.
+              # If we knew the realm, we could use it instead of ``None``.
+              password_mgr.add_password(None, self.url, self.auth.username, self.auth.password)
+              handler = urllib2.HTTPBasicAuthHandler(password_mgr)
+              opener = urllib2.build_opener(handler)
+
+              # use the opener to fetch a URL
+              resp = opener.open(req)
+            else:
+              resp = urllib2.urlopen(req)
+
+            self.response.status_code = resp.code
+            self.response.headers = resp.info().dict
+            self.response.content = resp.read()
+
+            success = True
+
+          except Exception:
+            raise RequestException
+
+      elif self.method.lower() == 'delete':
+        if (not self.sent) or anyway:
+          try:
+            pass
+
+            success = True
+
+          except Exception:
+            raise RequestException
+
+      else:
+        raise InvalidMethod
+
+
+      self.sent = True if success else False
+
+      return success
 
 
 class Response(object):
 	"""The :class:`Request` object. It's awesome.
 	"""
 
-    def __init__(self):
-        self.content = None
-        self.status_code = None
-        self.headers = dict()
+  def __init__(self):
+      self.content = None
+      self.status_code = None
+      self.headers = dict()
 
 
 class AuthObject(object):
 	"""The :class:`AuthObject` is a simple HTTP Authentication token.
 
 	:param username: Username to authenticate with.
-    :param password: Password for given username.
-	 """
+  :param password: Password for given username.
+	"""
 
 	def __init__(self, username, password):
 		self.username = username
@@ -174,111 +207,111 @@ class AuthObject(object):
 
 
 def get(url, params={}, headers={}, auth=None):
-    """Sends a GET request. Returns :class:`Response` object.
-    """
-    r = Request()
+  """Sends a GET request. Returns :class:`Response` object.
+  """
+  r = Request()
 
-    r.method = 'GET'
-    r.url = url
-    r.headers = headers
-    r.auth = _detect_auth(url, auth)
+  r.method = 'GET'
+  r.url = url
+  r.headers = headers
+  r.auth = _detect_auth(url, auth)
 
-    r.send()
+  r.send()
 
-    return r.response
+  return r.response
 
 
 def head(url, data={}, headers={}, auth=None):
-    """Sends a HEAD request. Returns :class:`Response` object.
-    """
-    r = Request()
+  """Sends a HEAD request. Returns :class:`Response` object.
+  """
+  r = Request()
 
-    r.method = 'HEAD'
-    # return response object
-    r.data = data
-    r.headers = headers
-    r.auth = _detect_auth(url, auth)
+  r.method = 'HEAD'
+  # return response object
+  r.data = data
+  r.headers = headers
+  r.auth = _detect_auth(url, auth)
 
-    r.send()
+  r.send()
 
-    return r.response
+  return r.response
 
 
 def post(url, data={}, headers={}, auth=None):
-    """Sends a POST request. Returns :class:`Response` object.
-    """
-    r = Request()
+  """Sends a POST request. Returns :class:`Response` object.
+  """
+  r = Request()
 
-    r.url = url
-    r.method = 'POST'
-    # return response object
-    r.data = data
+  r.url = url
+  r.method = 'POST'
+  # return response object
+  r.data = data
 
-    r.headers = headers
-    r.auth = _detect_auth(url, auth)
+  r.headers = headers
+  r.auth = _detect_auth(url, auth)
 
-    r.send()
+  r.send()
 
-    return r.response
+  return r.response
 
 
 def put(url, params={}, headers={}, auth=None):
-    """Sends a PUT request. Returns :class:`Response` object.
-    """
-    r = Request()
+  """Sends a PUT request. Returns :class:`Response` object.
+  """
+  r = Request()
 
-    r.method = 'PUT'
-    # return response object
+  r.method = 'PUT'
+  # return response object
 
-    r.headers = headers
-    r.auth = _detect_auth(url, auth)
+  r.headers = headers
+  r.auth = _detect_auth(url, auth)
 
-    r.send()
+  r.send()
 
-    return r.response
+  return r.response
 
 
 def delete(url, params={}, headers={}, auth=None):
-    """Sends a DELETE request. Returns :class:`Response` object.
-    """
-    r = Request()
+  """Sends a DELETE request. Returns :class:`Response` object.
+  """
+  r = Request()
 
-    r.method = 'DELETE'
-    # return response object
+  r.method = 'DELETE'
+  # return response object
 
-    r.headers = headers
-    r.auth = _detect_auth(url, auth)
+  r.headers = headers
+  r.auth = _detect_auth(url, auth)
 
-    r.send()
+  r.send()
 
-    return r.response
+  return r.response
 
 
 def add_autoauth(url, authobject):
-    global AUTHOAUTHS
+  global AUTHOAUTHS
 
-    AUTHOAUTHS.append((url, authobject))
+  AUTHOAUTHS.append((url, authobject))
 
 def _detect_auth(url, auth):
-    return _get_autoauth(url) if not auth else auth
+  return _get_autoauth(url) if not auth else auth
 
 
 def _get_autoauth(url):
-    for (autoauth_url, auth) in AUTOAUTHS:
-        if autoauth_url in url:
-            return auth
+  for (autoauth_url, auth) in AUTOAUTHS:
+    if autoauth_url in url:
+      return auth
 
-    return None
+  return None
 
 
 class RequestException(Exception):
-    """There was an ambiguous exception that occured while handling requests."""
+  """There was an ambiguous exception that occured while handling requests."""
 
 class AuthenticationError(RequestException):
-    """The authentication credentials provided are invalid."""
+  """The authentication credentials provided are invalid."""
 
 class URLRequired(RequestException):
-    """A invalid URL is required to make a request."""
+  """A invalid URL is required to make a request."""
 
 class InvalidMethod(RequestException):
-    """An inappropriate method was attempted."""
+  """An inappropriate method was attempted."""
