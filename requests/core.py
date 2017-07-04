@@ -55,6 +55,26 @@ class Request(object):
 	def _checks(self):
 		pass
 
+
+  def _get_opener(self):
+    """ Creates appropriate opener object for urllib2.
+    """
+
+    if self.auth:
+
+      # create a password manager
+      authr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+
+      authr.add_password(None, self.url, self.auth.username, self.auth.password)
+      handler = urllib2.HTTPBasicAuthHandler(authr)
+      opener = urllib2.build_opener(handler)
+
+      # use the opener to fetch a url
+      return opener.open
+    else:
+      return urllib2.urlopen
+
+
   def send(self, anyway=False):
     """Sends the requests.
 
@@ -65,37 +85,25 @@ class Request(object):
     if self.method.lower() == 'get':
       if (not self.sent) or anyway:
         try:
-          req = urllib2.Request(self.url)
 
-          if self.headers:
-            r.headers = self.headers
 
           # url encode from data if it's a dict
-          if isinstance(self.data, dict):
-            req.params = urllib.urlencode(self.params)
+          if isinstance(self.params, dict):
+            params = urllib.urlencode(self.params)
           else:
-            req.params = self.params
+            params = self.params
 
-          if self.auth:
+          req = urllib2.Request("%s?%s" % (self.url, params))
 
-            # create a password manager
-            password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+          if self.headers:
+            req.headers = self.headers
 
-            # add the username and password.
-            # if we knew the realm, we could use it instead of ``None``.
-            password_mgr.add_password(None, self.url, self.auth.username, self.auth.password)
-            handler = urllib2.HTTPBasicAuthHandler(password_mgr)
-            opener = urllib2.build_opener(handler)
-
-            # use the opener to fetch a url
-            resp = opener.open(req)
-          else:
-            resp = urllib2.urlopen(req)
+          opener = self._get_opener()
+          resp = opener(req)
 
           self.response.status_code = resp.code
           self.response.headers = resp.info().dict
           self.response.content = resp.read()
-
 
           success = True
 
