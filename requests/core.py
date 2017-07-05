@@ -66,7 +66,9 @@ class Request(object):
 
 
     def _checks(self):
-        pass
+        """Deterministic checks for consistiency"""
+        if not self.url:
+            raise URLRequired
 
 
     def _get_opener(self):
@@ -95,22 +97,26 @@ class Request(object):
         """
         self._checks()
 
+        success = False
+
         if self.method in ('GET', 'HEAD', 'DELETE'):
             if (not self.sent) or anyway:
+
+                # url encode GET params if it's a dict
+                if isinstance(self.params, dict):
+                    params = urllib.urlencode(self.params)
+                else:
+
+                    params = self.params
+
+                req = _Request(("%s?%s" % (self.url, params)), method=self.method)
+
+                if self.headers:
+                    req.headers = self.headers
+
+                opener = self._get_opener()
+
                 try:
-                    # url encode GET params if it's a dict
-                    if isinstance(self.params, dict):
-                        params = urllib.urlencode(self.params)
-                    else:
-
-                        params = self.params
-
-                    req = _Request(("%s?%s" % (self.url, params)), method=self.method)
-
-                    if self.headers:
-                        req.headers = self.headers
-
-                    opener = self._get_opener()
                     resp = opener(req)
 
                     self.response.status_code = resp.code
@@ -119,56 +125,51 @@ class Request(object):
                         self.response.content = resp.read()
 
                     success = True
-
-                except RequestException:
-                    raise RequestException
+                except urllib2.HTTPError, why:
+                    self.response.status_code = why.code
 
 
         elif self.method.lower() == 'PUT':
             if (not self.sent) or anyway:
 
+                req = _Request(self.url, method='PUT')
+
+                if self.headers:
+                    req.headers = self.headers
+
+                req.data = self.data
+
                 try:
-                    try:
+                    opener = self._get_opener()
+                    resp = opener(req)
 
-                        req = _Request(self.url, method='PUT')
+                    self.response.status_code = resp.code
+                    self.response.headers = resp.info().dict
+                    self.response.content = resp.read()
 
-                        if self.headers:
-                            req.headers = self.headers
+                    success = True
 
-                        req.data = self.data
+                except urllib2.HTTPError, why:
+                    self.response.status_code = why.code
 
-                        opener = self._get_opener()
-                        resp = opener(req)
-
-                        self.response.status_code = resp.code
-                        self.response.headers = resp.info().dict
-                        self.response.content = resp.read()
-
-                        success = True
-                    except urllib2.HTTPError:
-                        self.response.status_code = 405
-
-                except Exception:
-                    # TODO: Fix this shit
-                    raise RequestException
 
 
 
         elif self.method.lower() == 'POST':
             if (not self.sent) or anyway:
+
+                req = _Request(self.url, method='POST')
+
+                if self.headers:
+                    req.headers = self.headers
+
+                # url encode form data if it's a dict
+                if isinstance(self.data, dict):
+                    req.data = urllib.urlencode(self.data)
+                else:
+                    req.data = self.data
+
                 try:
-
-                    req = _Request(self.url, method='POST')
-
-                    if self.headers:
-                        req.headers = self.headers
-
-                    # url encode form data if it's a dict
-                    if isinstance(self.data, dict):
-                        req.data = urllib.urlencode(self.data)
-                    else:
-                        req.data = self.data
-
 
                     opener = self._get_opener()
                     resp = opener(req)
@@ -179,8 +180,8 @@ class Request(object):
 
                     success = True
 
-                except Exception:
-                    raise RequestException
+                except urllib2.HTTPError, why:
+                    self.response.status_code = why.code
 
 
         self.sent = True if success else False
