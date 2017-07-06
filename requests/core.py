@@ -15,7 +15,7 @@ import urllib2
 
 
 __title__ = 'requests'
-__version__ = '0.2.1'
+__version__ = '0.2.0'
 __build__ = 0x000200
 __author__ = 'Kenneth Reitz'
 __license__ = 'ISC'
