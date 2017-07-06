@@ -33,7 +33,8 @@ class _Request(urllib2.Request):
     def __init__(self, url,
                  data=None, headers={}, origin_req_host=None,
                  unverifiable=False, method=None):
-        urllib2.Request.__init__(self, url, data, headers, origin_req_host, unverifiable)
+        urllib2.Request.__init__(self, url, data, headers, origin_req_host,
+                                 unverifiable)
         self.method = method
 
     def get_method(self):
@@ -95,9 +96,14 @@ class Request(object):
 
 
     def send(self, anyway=False):
-        """Sends the request.
+        """Sends the request. Returns True of successfull, False if not.
+            If there was an HTTPError during transmission,
+            self.response.status_code will contain the HTTPError code.
 
-           :param anyway: If True, request will be sent, even if it has already been sent.
+            Once a request is successfully sent, `sent` will equal True.
+
+            :param anyway: If True, request will be sent, even if it has
+            already been sent.
         """
         self._checks()
 
@@ -194,7 +200,9 @@ class Request(object):
 
 
 class Response(object):
-    """The :class:`Request` object. It's awesome.
+    """The :class:`Request` object. All :class`Request` objects contain a
+    :class:`Request.response <response>` attribute, which is an instance of
+    this class.
     """
 
     def __init__(self):
@@ -204,7 +212,10 @@ class Response(object):
 
 
 class AuthObject(object):
-    """The :class:`AuthObject` is a simple HTTP Authentication token.
+    """The :class:`AuthObject` is a simple HTTP Authentication token. When
+    given to a Requests function, it enables Basic HTTP Authorization for that
+    Request. You can also enable Authorization for domain realms with AutoAuth.
+    See AutoAuth for more details.
 
     :param username: Username to authenticate with.
     :param password: Password for given username.
