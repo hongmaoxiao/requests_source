@@ -26,8 +26,13 @@ AUTOAUTHS = []
 
 
 class _Request(urllib2.Request):
-    def __init__(self, url, data=None, headers={},
-                 origin_req_host=None, unverifiable=False, method=None):
+    """Hidden wrapper around the urllib2.Request object. Allows for manual
+    setting of HTTP methods.
+    """
+
+    def __init__(self, url,
+                 data=None, headers={}, origin_req_host=None,
+                 unverifiable=False, method=None):
         urllib2.Request.__init__(self, url, data, headers, origin_req_host, unverifiable)
         self.method = method
 
@@ -39,7 +44,8 @@ class _Request(urllib2.Request):
 
 
 class Request(object):
-    """The :class:`Request` object. It's awesome.
+    """The :class:`Request` object. It carries out all functionality of
+    Requests. Recommended interface is with the Requests functions.
     """
 
     _METHODS = ('GET', 'HEAD', 'PUT', 'POST', 'DELETE')
