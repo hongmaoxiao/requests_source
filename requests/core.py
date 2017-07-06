@@ -62,6 +62,13 @@ class Request(object):
         self.sent = False
 
 
+    def __repr__(self):
+        try:
+            repr = '<Response [%s]>' % (self.method)
+        except:
+            repr = '<Response object>'
+        return repr
+
     def __setattr__(self, name, value):
         if (name == 'method') and (value):
             if not value in self._METHODS:
