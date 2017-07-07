@@ -21,7 +21,7 @@ required = []
 
 setup(
 	name='requests',
-	version='0.0.1',
+	version='0.2.0',
 	description='Python HTTP Library that\'s actually usable.',
 	long_description=open('README.rst').read() + '\n\n' +
 	                 open('HISTORY.rst').read(),
@@ -37,7 +37,7 @@ setup(
 		# 'Development Status :: 5 - Production/Stable',
 		'Intended Audience :: Developers',
 		'Natural Language :: English',
-		'License :: OSI Approved :: MIT License',
+		'License :: OSI Approved :: ISC License (ISCL)',
 		'Programming Language :: Python',
         # 'Programming Language :: Python :: 2.5',
         'Programming Language :: Python :: 2.6',
